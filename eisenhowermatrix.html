@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eisenhower Matrix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..800;1,62..125,400..700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#E6E9EC;
+    --paper:#FFFFFF;
+    --ink:#15181D;
+    --muted:#6B7280;
+    --rule:#CFD5DB;
+    --do:#C2412B;
+    --schedule:#2F5D8C;
+    --delegate:#A8761A;
+    --eliminate:#7C857E;
+    --radius:10px;
+    --shadow:0 1px 0 rgba(21,24,29,.06), 0 8px 20px -14px rgba(21,24,29,.45);
+    --speed:140ms;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--board);
+    color:var(--ink);
+    font-family:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:clamp(16px,3vw,40px);
+  }
+  button, input, textarea, select{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
+
+  .wrap{max-width:1240px;margin:0 auto}
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;
+    padding-bottom:18px;margin-bottom:clamp(20px,3vw,32px);
+    border-bottom:1px solid var(--rule);
+  }
+  .masthead h1{
+    font-size:clamp(28px,4.4vw,44px);
+    font-stretch:125%;
+    font-weight:700;
+    letter-spacing:-.02em;
+    line-height:1;
+    margin:0;
+  }
+  .masthead p{margin:6px 0 0;color:var(--muted);max-width:52ch}
+  .tally{margin-left:auto;display:flex;align-items:center;gap:18px}
+  .tally b{font-stretch:125%;font-weight:700;font-variant-numeric:tabular-nums}
+  .ghost{
+    background:none;border:1px solid var(--rule);border-radius:999px;
+    padding:6px 14px;cursor:pointer;color:var(--muted);
+    transition:border-color var(--speed), color var(--speed);
+  }
+  .ghost:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* ---------- board ---------- */
+  .board{display:grid;grid-template-columns:minmax(250px,310px) 1fr;gap:clamp(20px,2.4vw,34px);align-items:start}
+
+  /* ---------- capture rail ---------- */
+  .rail{position:sticky;top:24px;display:grid;gap:22px}
+  .rail h2, .plot h2{
+    font-size:13px;font-weight:700;font-stretch:112%;letter-spacing:.01em;
+    margin:0 0 10px;
+  }
+  .composer{background:var(--paper);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+  .composer textarea{
+    width:100%;min-height:96px;resize:vertical;
+    border:1px solid var(--rule);border-radius:8px;background:#FBFCFD;
+    padding:10px 12px;
+  }
+  .composer textarea::placeholder{color:#9AA2AC}
+  .composer textarea:focus{outline:none;border-color:var(--ink);background:#fff}
+  .composer-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+  .hint{color:var(--muted);font-size:12.5px}
+  .primary{
+    background:var(--ink);color:#fff;border:0;border-radius:8px;
+    padding:9px 16px;cursor:pointer;font-weight:600;
+    transition:opacity var(--speed);
+  }
+  .primary:hover{opacity:.86}
+
+  .inbox{background:var(--paper);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+  .inbox-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+  .inbox-head h2{margin:0}
+  .count{color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}
+
+  /* ---------- plot ---------- */
+  .plot{
+    display:grid;
+    grid-template-columns:34px 1fr 1fr;
+    grid-template-rows:auto 1fr 1fr;
+    gap:10px;
+  }
+  .axis-x{
+    display:flex;align-items:flex-end;padding-bottom:2px;gap:10px;
+    color:var(--muted);font-size:12.5px;font-stretch:112%;font-weight:600;
+  }
+  .axis-x::after{content:"";flex:1;height:1px;background:var(--rule);margin-bottom:7px}
+  .axis-y{
+    display:flex;align-items:center;justify-content:center;
+    color:var(--muted);font-size:12.5px;font-stretch:112%;font-weight:600;
+  }
+  .axis-y span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap}
+  .axis-y::after{content:"";width:1px;flex:0 0 auto;height:0}
+
+  .quad{
+    background:var(--paper);border-radius:var(--radius);box-shadow:var(--shadow);
+    border-top:3px solid var(--c);
+    padding:16px 16px 14px;min-height:210px;
+    display:flex;flex-direction:column;
+    transition:box-shadow var(--speed), background var(--speed);
+  }
+  .quad[data-q="do"]{--c:var(--do)}
+  .quad[data-q="schedule"]{--c:var(--schedule)}
+  .quad[data-q="delegate"]{--c:var(--delegate)}
+  .quad[data-q="eliminate"]{--c:var(--eliminate)}
+  .quad.over{background:#F4F7FA;box-shadow:0 0 0 2px var(--c) inset, var(--shadow)}
+  .quad-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+  .quad-head h3{
+    margin:0;font-size:19px;font-stretch:125%;font-weight:700;letter-spacing:-.01em;color:var(--c);
+  }
+  .quad-head .note{color:var(--muted);font-size:12.5px}
+  .quad-head .count{margin-left:auto}
+
+  /* ---------- cards ---------- */
+  ul.stack{list-style:none;margin:0;padding:0;display:grid;gap:8px;align-content:start;flex:1}
+  .card{
+    position:relative;
+    background:#FBFCFD;border:1px solid var(--rule);border-radius:8px;
+    padding:10px 34px 10px 12px;
+    cursor:grab;
+    transition:border-color var(--speed), background var(--speed), transform var(--speed);
+  }
+  .card:hover{border-color:#AFB7C0;background:#fff}
+  .card.dragging{opacity:.4;cursor:grabbing}
+  .card p{margin:0;overflow-wrap:anywhere}
+  .card.done p{text-decoration:line-through;color:var(--muted)}
+  .card .tools{position:absolute;top:6px;right:6px;display:flex;gap:2px}
+  .tools button{
+    background:none;border:0;width:22px;height:22px;border-radius:5px;cursor:pointer;
+    color:#9AA2AC;line-height:1;font-size:14px;
+    transition:color var(--speed), background var(--speed);
+  }
+  .tools button:hover{color:var(--ink);background:#EDF0F3}
+  .card .where{
+    margin-top:6px;display:none;gap:6px;flex-wrap:wrap;
+  }
+  .card.moving .where{display:flex}
+  .where button{
+    border:1px solid var(--rule);background:#fff;border-radius:999px;
+    padding:3px 9px;font-size:12px;cursor:pointer;color:var(--muted);
+  }
+  .where button:hover{border-color:var(--ink);color:var(--ink)}
+
+  .empty{color:#9AA2AC;font-size:13px;margin:2px 0 0}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:980px){
+    .board{grid-template-columns:1fr}
+    .rail{position:static}
+    .plot{grid-template-columns:1fr;grid-template-rows:none}
+    .axis-x,.axis-y{display:none}
+    .quad{min-height:0}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <h1>Eisenhower Matrix</h1>
+      <p>Write down what is on your mind, then place each item by how urgent and how important it really is.</p>
+    </div>
+    <div class="tally">
+      <span><b id="tally-open">0</b> <span class="hint">open</span></span>
+      <span><b id="tally-done">0</b> <span class="hint">finished</span></span>
+      <button class="ghost" id="clear-done" hidden>Clear finished</button>
+    </div>
+  </header>
+
+  <main class="board">
+
+    <aside class="rail">
+      <section class="composer">
+        <h2>What is on your mind</h2>
+        <textarea id="input" placeholder="One task, worry, or idea per line" aria-label="New item"></textarea>
+        <div class="composer-row">
+          <span class="hint">Enter to add</span>
+          <button class="primary" id="add">Add to unsorted</button>
+        </div>
+      </section>
+
+      <section class="inbox">
+        <div class="inbox-head">
+          <h2>Unsorted</h2>
+          <span class="count" id="count-inbox">0</span>
+        </div>
+        <ul class="stack" id="list-inbox" data-q="inbox"></ul>
+      </section>
+
+      <p class="hint">Drag a card into a square, or press <b>1</b>–<b>4</b> while a card is selected. <b>X</b> marks it finished, <b>0</b> sends it back to unsorted.</p>
+    </aside>
+
+    <section class="plot" aria-label="Matrix">
+      <div></div>
+      <div class="axis-x">Urgent</div>
+      <div class="axis-x">Not urgent</div>
+
+      <div class="axis-y"><span>Important</span></div>
+      <div class="quad" data-q="do">
+        <div class="quad-head">
+          <h3>Do now</h3>
+          <span class="note">Today, by you</span>
+          <span class="count" id="count-do">0</span>
+        </div>
+        <ul class="stack" id="list-do" data-q="do"></ul>
+      </div>
+      <div class="quad" data-q="schedule">
+        <div class="quad-head">
+          <h3>Schedule</h3>
+          <span class="note">Give it a date</span>
+          <span class="count" id="count-schedule">0</span>
+        </div>
+        <ul class="stack" id="list-schedule" data-q="schedule"></ul>
+      </div>
+
+      <div class="axis-y"><span>Not important</span></div>
+      <div class="quad" data-q="delegate">
+        <div class="quad-head">
+          <h3>Delegate</h3>
+          <span class="note">Someone else can</span>
+          <span class="count" id="count-delegate">0</span>
+        </div>
+        <ul class="stack" id="list-delegate" data-q="delegate"></ul>
+      </div>
+      <div class="quad" data-q="eliminate">
+        <div class="quad-head">
+          <h3>Drop</h3>
+          <span class="note">Costs more than it returns</span>
+          <span class="count" id="count-eliminate">0</span>
+        </div>
+        <ul class="stack" id="list-eliminate" data-q="eliminate"></ul>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var QUADS = ["do", "schedule", "delegate", "eliminate"];
+  var LABELS = { inbox: "Unsorted", do: "Do now", schedule: "Schedule", delegate: "Delegate", eliminate: "Drop" };
+  var EMPTY = {
+    inbox: "Nothing waiting. Add a thought above.",
+    do: "Nothing on fire.",
+    schedule: "Nothing booked yet.",
+    delegate: "Nothing to hand off.",
+    eliminate: "Nothing dropped."
+  };
+  var KEY = "eisenhower.items.v1";
+
+  /* Storage that quietly falls back to memory if the browser blocks it. */
+  var store = (function () {
+    var mem = null;
+    try {
+      window.localStorage.setItem("__probe", "1");
+      window.localStorage.removeItem("__probe");
+      return {
+        get: function () { return window.localStorage.getItem(KEY); },
+        set: function (v) { window.localStorage.setItem(KEY, v); }
+      };
+    } catch (e) {
+      return { get: function () { return mem; }, set: function (v) { mem = v; } };
+    }
+  })();
+
+  var items = load();
+
+  function load() {
+    try {
+      var raw = store.get();
+      if (!raw) return seed();
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.filter(valid) : seed();
+    } catch (e) { return seed(); }
+  }
+
+  function valid(it) {
+    return it && typeof it.text === "string" && (it.q === "inbox" || QUADS.indexOf(it.q) > -1);
+  }
+
+  function seed() {
+    return [
+      { id: uid(), text: "Reply to the client escalation", q: "do", done: false },
+      { id: uid(), text: "Outline next quarter's roadmap", q: "schedule", done: false },
+      { id: uid(), text: "Book the team's travel", q: "delegate", done: false },
+      { id: uid(), text: "Scroll through notifications", q: "eliminate", done: false },
+      { id: uid(), text: "Call the dentist back", q: "inbox", done: false }
+    ];
+  }
+
+  function uid() { return "i" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function save() { try { store.set(JSON.stringify(items)); } catch (e) {} }
+  function find(id) { for (var i = 0; i < items.length; i++) if (items[i].id === id) return items[i]; return null; }
+
+  /* ---------- rendering ---------- */
+
+  function render() {
+    ["inbox"].concat(QUADS).forEach(function (q) {
+      var list = document.getElementById("list-" + q);
+      var rows = items.filter(function (it) { return it.q === q; });
+      rows.sort(function (a, b) { return (a.done === b.done) ? 0 : (a.done ? 1 : -1); });
+
+      list.innerHTML = "";
+      if (!rows.length) {
+        var p = document.createElement("p");
+        p.className = "empty";
+        p.textContent = EMPTY[q];
+        list.appendChild(p);
+      } else {
+        rows.forEach(function (it) { list.appendChild(card(it)); });
+      }
+      document.getElementById("count-" + q).textContent = rows.length;
+    });
+
+    var done = items.filter(function (it) { return it.done; }).length;
+    document.getElementById("tally-open").textContent = items.length - done;
+    document.getElementById("tally-done").textContent = done;
+    document.getElementById("clear-done").hidden = done === 0;
+    save();
+  }
+
+  function card(it) {
+    var li = document.createElement("li");
+    li.className = "card" + (it.done ? " done" : "");
+    li.draggable = true;
+    li.tabIndex = 0;
+    li.dataset.id = it.id;
+    li.setAttribute("aria-label", it.text + " — in " + LABELS[it.q]);
+
+    var p = document.createElement("p");
+    p.textContent = it.text;
+    li.appendChild(p);
+
+    var tools = document.createElement("div");
+    tools.className = "tools";
+    tools.appendChild(tool("✓", it.done ? "Mark unfinished" : "Mark finished", function () { toggle(it.id); }));
+    tools.appendChild(tool("⋯", "Move this", function () { li.classList.toggle("moving"); }));
+    tools.appendChild(tool("×", "Delete this", function () { remove(it.id); }));
+    li.appendChild(tools);
+
+    var where = document.createElement("div");
+    where.className = "where";
+    ["inbox"].concat(QUADS).forEach(function (q) {
+      if (q === it.q) return;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = LABELS[q];
+      b.addEventListener("click", function () { move(it.id, q); });
+      where.appendChild(b);
+    });
+    li.appendChild(where);
+
+    li.addEventListener("dragstart", function (e) {
+      e.dataTransfer.setData("text/plain", it.id);
+      e.dataTransfer.effectAllowed = "move";
+      li.classList.add("dragging");
+    });
+    li.addEventListener("dragend", function () { li.classList.remove("dragging"); });
+
+    li.addEventListener("keydown", function (e) {
+      var k = e.key.toLowerCase();
+      var target = null;
+      if (k === "1") target = "do";
+      else if (k === "2") target = "schedule";
+      else if (k === "3") target = "delegate";
+      else if (k === "4") target = "eliminate";
+      else if (k === "0") target = "inbox";
+
+      if (target) { e.preventDefault(); move(it.id, target); }
+      else if (k === "x") { e.preventDefault(); toggle(it.id); }
+      else if (k === "delete" || k === "backspace") { e.preventDefault(); remove(it.id); }
+    });
+
+    return li;
+  }
+
+  function tool(glyph, label, fn) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.textContent = glyph;
+    b.title = label;
+    b.setAttribute("aria-label", label);
+    b.addEventListener("click", function (e) { e.stopPropagation(); fn(); });
+    return b;
+  }
+
+  /* ---------- actions ---------- */
+
+  function add() {
+    var box = document.getElementById("input");
+    var lines = box.value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!lines.length) { box.focus(); return; }
+    lines.forEach(function (text) { items.push({ id: uid(), text: text, q: "inbox", done: false }); });
+    box.value = "";
+    render();
+    box.focus();
+  }
+
+  function move(id, q) {
+    var it = find(id);
+    if (!it || it.q === q) return;
+    it.q = q;
+    render();
+    refocus(id);
+  }
+
+  function toggle(id) {
+    var it = find(id);
+    if (!it) return;
+    it.done = !it.done;
+    render();
+    refocus(id);
+  }
+
+  function remove(id) {
+    items = items.filter(function (it) { return it.id !== id; });
+    render();
+  }
+
+  function refocus(id) {
+    var el = document.querySelector('.card[data-id="' + id + '"]');
+    if (el) el.focus();
+  }
+
+  /* ---------- wiring ---------- */
+
+  document.getElementById("add").addEventListener("click", add);
+
+  document.getElementById("input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); add(); }
+  });
+
+  document.getElementById("clear-done").addEventListener("click", function () {
+    items = items.filter(function (it) { return !it.done; });
+    render();
+  });
+
+  ["inbox"].concat(QUADS).forEach(function (q) {
+    var zone = document.getElementById("list-" + q);
+    var frame = zone.closest(".quad") || zone.closest(".inbox");
+
+    zone.addEventListener("dragover", function (e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      if (frame) frame.classList.add("over");
+    });
+    zone.addEventListener("dragleave", function (e) {
+      if (frame && !zone.contains(e.relatedTarget)) frame.classList.remove("over");
+    });
+    zone.addEventListener("drop", function (e) {
+      e.preventDefault();
+      if (frame) frame.classList.remove("over");
+      var id = e.dataTransfer.getData("text/plain");
+      if (id) move(id, q);
+    });
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".card")) {
+      Array.prototype.forEach.call(document.querySelectorAll(".card.moving"), function (c) {
+        c.classList.remove("moving");
+      });
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
