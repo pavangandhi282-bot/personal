@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PM Fundamentals · Session 1</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1020;
+      --panel: #141c30;
+      --panel-alt: #1b2540;
+      --border: #2b3854;
+      --text: #eef2ff;
+      --muted: #aebbd5;
+      --accent: #a99aff;
+      --mint: #75e2bc;
+      --amber: #ffd18a;
+      --red: #ffa2b1;
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at top right, #28204a 0, transparent 45%), var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    button {
+      color: var(--text);
+      background: var(--panel-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 16px;
+      transition: background .15s, border-color .15s;
+    }
+    button:hover { background: #2d3958; border-color: var(--accent); }
+    button:disabled { opacity: .5; cursor: default; }
+    button.primary { background: var(--accent); color: #17112f; font-weight: 750; }
+    button.primary:hover { background: #c0b5ff; }
+    :focus-visible { outline: 3px solid var(--mint); outline-offset: 4px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1.1; letter-spacing: -.045em; margin-bottom: 18px; }
+    h2 { font-size: clamp(1.6rem, 3vw, 2.25rem); line-height: 1.2; letter-spacing: -.03em; }
+    h3 { font-size: 1.05rem; margin-bottom: 10px; }
+    p { margin-bottom: 14px; }
+    small, .muted { color: var(--muted); }
+    strong { color: var(--text); }
+    [hidden] { display: none !important; }
+
+    .app { max-width: 1200px; margin: auto; padding: 38px 24px 70px; }
+    .eyebrow { color: var(--mint); text-transform: uppercase; letter-spacing: .15em; font-size: .74rem; font-weight: 800; }
+    .hero { display: grid; grid-template-columns: 1fr 230px; gap: 30px; align-items: center; padding: 30px 0; }
+    .hero p { max-width: 680px; color: var(--muted); }
+    .progress-card { background: #141c30cc; padding: 22px; border: 1px solid var(--border); border-radius: var(--radius); }
+    .progress-card strong { display: block; font-size: 2rem; }
+    progress { width: 100%; height: 9px; accent-color: var(--mint); border: 0; border-radius: 9px; }
+    progress::-webkit-progress-bar { background: var(--border); border-radius: 9px; }
+    progress::-webkit-progress-value { background: var(--mint); border-radius: 9px; }
+    .nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 30px; }
+    .nav button { color: var(--muted); }
+    .nav button[aria-current="page"] { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 750; }
+    .section-head { max-width: 780px; margin-bottom: 24px; }
+    .section-head p { color: var(--muted); }
+    .grid { display: grid; gap: 18px; }
+    .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .card p:last-child { margin-bottom: 0; }
+    .inset { background: var(--panel-alt); padding: 18px; border-radius: 14px; }
+    .note { border-left: 3px solid var(--amber); padding: 12px 17px; margin: 22px 0; background: #ffd18a09; color: var(--muted); }
+    .tag { display: inline-block; padding: 4px 10px; background: #a99aff18; color: #cbbfff; border-radius: 8px; font-size: .75rem; font-weight: 750; margin-bottom: 14px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .stack > * + * { margin-top: 16px; }
+    .feedback { padding: 17px; margin-top: 16px; background: #75e2bc0b; border: 1px solid #75e2bc55; border-radius: 12px; }
+    .feedback:empty { display: none; }
+    .feedback.bad { background: #ffa2b10b; border-color: #ffa2b155; }
+    .big { font-size: 2rem; font-weight: 800; line-height: 1.2; }
+    .mint { color: var(--mint); }
+    .amber { color: var(--amber); }
+    .spaced { margin-top: 22px; }
+    .finish { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--border); }
+    label { display: block; font-weight: 650; margin-bottom: 8px; }
+    input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+    input[type="checkbox"] { width: 19px; height: 19px; accent-color: var(--accent); }
+    .check { display: flex; align-items: center; gap: 10px; padding: 12px 0; font-weight: 500; }
+    select { width: 100%; color: var(--text); background: var(--panel-alt); border: 1px solid var(--border); padding: 12px; border-radius: 10px; }
+    .meter { height: 12px; background: var(--border); overflow: hidden; border-radius: 9px; margin: 12px 0; }
+    .meter span { display: block; height: 100%; width: 0; background: var(--mint); transition: width .25s; }
+    .choices { display: grid; gap: 10px; }
+    .choices button { text-align: left; }
+    .selected { border-color: var(--accent); background: #a99aff22; }
+    .correct { border-color: var(--mint) !important; background: #75e2bc15 !important; }
+    .wrong { border-color: var(--red) !important; background: #ffa2b115 !important; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 530px; }
+    th, td { padding: 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { color: var(--mint); }
+    td:first-child { font-weight: 650; width: 23%; }
+    .step-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .step-list button { flex: 1 1 150px; text-align: left; }
+    .step-list small { display: block; }
+    .step-list button[aria-pressed="true"] { border-color: var(--accent); background: #a99aff20; }
+    .ticket { padding: 15px; background: var(--panel-alt); border: 1px solid var(--border); border-radius: 12px; }
+    .ticket label { display: flex; gap: 10px; align-items: flex-start; font-size: .95rem; margin: 0; }
+    .ticket input { flex-shrink: 0; margin-top: 5px; }
+    .ticket small { display: block; margin-left: 29px; }
+    .flashcard { width: 100%; min-height: 230px; text-align: center; padding: 30px; }
+    .flashcard strong { display: block; font-size: 1.6rem; margin: 14px 0; }
+    .flashcard span { display: block; max-width: 680px; margin: auto; }
+    .counter { font-size: .8rem; color: var(--muted); }
+    footer { margin-top: 38px; color: var(--muted); font-size: .8rem; }
+
+    @media (max-width: 750px) {
+      .app { padding: 20px 16px 45px; }
+      .hero, .two, .three { grid-template-columns: 1fr; }
+      .hero { gap: 14px; }
+      .progress-card { padding: 16px; }
+      .progress-card strong { font-size: 1.4rem; }
+      .card { padding: 20px; }
+      .nav { gap: 6px; }
+      .nav button { flex: 1 1 130px; font-size: .9rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Pavan's revision lab · Session 01</div>
+        <h1>Think like a<br>product manager.</h1>
+        <p>Explore the concepts, make product decisions, and test what you remember. Each activity connects a user problem to a business outcome.</p>
+      </div>
+      <div class="progress-card">
+        <small>Your revision progress</small>
+        <strong id="progressText">0 of 6 reviewed</strong>
+        <progress id="progress" max="6" value="0" aria-label="Topics reviewed"></progress>
+        <small>Mark a topic when you feel confident.</small>
+      </div>
+    </header>
+
+    <nav class="nav" aria-label="Revision topics">
+      <button data-page="rule" aria-current="page">01 Golden rule</button>
+      <button data-page="facebook">02 Facebook case</button>
+      <button data-page="markets">03 B2B and B2C</button>
+      <button data-page="delivery">04 Idea to delivery</button>
+      <button data-page="discovery">05 Assumptions</button>
+      <button data-page="roles">06 Customer and user</button>
+      <button data-page="practice">Practice room</button>
+    </nav>
+
+    <main>
+      <section id="rule" aria-labelledby="ruleTitle">
+        <div class="section-head">
+          <div class="eyebrow">The foundation</div>
+          <h2 id="ruleTitle">Understand user needs.<br>Achieve business outcomes.</h2>
+          <p>Your session's golden rule is a useful compass for PM work. Help people solve a real problem in a way that also supports the business.</p>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <span class="tag">Decision simulator</span>
+            <h3>Would you invest in this idea?</h3>
+            <p class="muted">Move the sliders to explore four situations. These values describe a hypothetical idea, not a validated scoring framework.</p>
+            <label for="need">Evidence of a user need <output id="needValue">70</output>%</label>
+            <input id="need" type="range" min="0" max="100" value="70">
+            <label class="spaced" for="business">Credible business benefit <output id="businessValue">70</output>%</label>
+            <input id="business" type="range" min="0" max="100" value="70">
+            <div id="ruleFeedback" class="feedback" aria-live="polite"></div>
+          </div>
+
+          <div class="card">
+            <span class="tag">Why both matter</span>
+            <h3>A solution needs a problem</h3>
+            <p>Building first and finding a use later is like buying a key before knowing which door you need to open.</p>
+            <h3>The business needs a reason to invest</h3>
+            <p>Activation, retention, acquisition, engagement, and revenue can be business outcomes. Choose the outcome that matters for the problem.</p>
+            <div class="inset">
+              <strong>Your territory test</strong>
+              <p>Does this work help us understand users or achieve an important business outcome? If yes, it may belong in your PM work. Then consider priority and ownership.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="note">A useful refinement to the session notes. Users do not always pay directly. Advertisers, employers, or other customers may fund the product. Business value can also include lower costs or reduced risk.</div>
+        <div class="finish"><button class="primary" data-complete="rule">Mark as reviewed</button></div>
+      </section>
+
+      <section id="facebook" aria-labelledby="facebookTitle" hidden>
+        <div class="section-head">
+          <div class="eyebrow">Apply the golden rule</div>
+          <h2 id="facebookTitle">Give people a reason to return.</h2>
+          <p>In your session's Facebook case, people signed up but did not keep coming back. Explore how relevant connections and easier access to updates address different parts of that experience.</p>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <span class="tag">Experience simulator</span>
+            <label for="friends">Friends added in the first 10 days <output id="friendCount">3</output></label>
+            <input id="friends" type="range" min="0" max="15" value="3">
+            <label class="check"><input id="knownFriends" type="checkbox" checked> These are people the user knows</label>
+            <label class="check"><input id="feed" type="checkbox"> Show friends' updates in a home feed</label>
+            <div id="facebookFeedback" class="feedback" aria-live="polite"></div>
+          </div>
+
+          <div class="card">
+            <span class="tag">Problem and response</span>
+            <h3>People you may know</h3>
+            <p>Relevant suggestions can help a new user find familiar people and experience the product's value. That supports activation and may help later retention.</p>
+            <h3>Home feed</h3>
+            <p>Updates appear in one place, reducing the effort of opening profiles individually. Useful, fresh content can encourage return visits.</p>
+            <div class="inset">
+              <strong>Activation and retention</strong>
+              <p>Activation means reaching an initial moment of value. Retention means continuing to return and receive value over time.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="note">Treat this as the teaching narrative from your session, not a verified account of Facebook's product history. The “7 friends in 10 days” idea is an association discussed in the notes, not proof of causation or a guaranteed threshold. Both features could affect both activation and retention.</div>
+
+        <div class="card">
+          <h3>Which check would strengthen the case?</h3>
+          <div class="choices" id="facebookChoices">
+            <button data-good="false">Count how many features the team launched</button>
+            <button data-good="true">Compare return rates in a well-designed experiment and check whether users found meaningful connections</button>
+            <button data-good="false">Assume every user with seven friends will stay</button>
+          </div>
+          <div id="facebookAnswer" class="feedback" aria-live="polite"></div>
+        </div>
+        <div class="finish"><button class="primary" data-complete="facebook">Mark as reviewed</button></div>
+      </section>
+
+      <section id="markets" aria-labelledby="marketsTitle" hidden>
+        <div class="section-head">
+          <div class="eyebrow">Who does the business serve?</div>
+          <h2 id="marketsTitle">Classify the transaction.</h2>
+          <p>B2B means business to business. B2C means business to consumer. The same company can serve both markets through different offerings.</p>
+        </div>
+
+        <div class="card">
+          <span class="tag">Market classifier</span>
+          <h3 id="marketScenario"></h3>
+          <div class="actions" id="marketChoices">
+            <button data-answer="B2B">B2B</button>
+            <button data-answer="B2C">B2C</button>
+            <button data-answer="Both">Both</button>
+          </div>
+          <div id="marketFeedback" class="feedback" aria-live="polite"></div>
+          <div class="actions"><button id="nextMarket">Next scenario</button></div>
+        </div>
+
+        <div class="card spaced table-wrap">
+          <table>
+            <caption class="muted">Common tendencies, not fixed rules</caption>
+            <thead><tr><th>Dimension</th><th>B2B</th><th>B2C</th></tr></thead>
+            <tbody>
+              <tr><td>Who buys</td><td>An organization</td><td>An individual consumer</td></tr>
+              <tr><td>Decision process</td><td>Often several stakeholders and a longer sales cycle</td><td>Often fewer stakeholders and a shorter purchase decision</td></tr>
+              <tr><td>Buyer and user</td><td>Often different people</td><td>Often the same person, with exceptions</td></tr>
+              <tr><td>Product concerns</td><td>Workflow fit, reliability, integrations, security, and return on investment</td><td>Convenience, price, habit, enjoyment, and personal value</td></tr>
+              <tr><td>Shared needs</td><td colspan="2">Both require usability, trust, customer research, and strong product judgment. Functional and emotional needs matter in both.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note">Avoid memorizing “B2B is easy” or “B2C needs natural product sense” as rules. Job availability and entry difficulty depend on the company, market, role, and your experience.</div>
+        <div class="finish"><button class="primary" data-complete="markets">Mark as reviewed</button></div>
+      </section>
+
+      <section id="delivery" aria-labelledby="deliveryTitle" hidden>
+        <div class="section-head">
+          <div class="eyebrow">Connect the working pieces</div>
+          <h2 id="deliveryTitle">From a problem to useful progress.</h2>
+          <p>Follow a study app team helping learners return to unfinished lessons. Discovery asks what is worth building and why. Delivery turns that learning into a working product.</p>
+        </div>
+
+        <div class="step-list" id="deliverySteps" aria-label="Explore planning and delivery">
+          <button data-step="0" aria-pressed="true">01 Roadmap<small>Direction and priorities</small></button>
+          <button data-step="1" aria-pressed="false">02 PRD<small>Shared product clarity</small></button>
+          <button data-step="2" aria-pressed="false">03 Backlog<small>Ordered work</small></button>
+          <button data-step="3" aria-pressed="false">04 Sprint<small>A short learning cycle</small></button>
+          <button data-step="4" aria-pressed="false">05 Stand-up<small>Coordinate and adapt</small></button>
+        </div>
+        <div class="card" id="deliveryDetail" aria-live="polite"></div>
+
+        <div class="grid two spaced">
+          <div class="card">
+            <span class="tag">Sprint planning simulator</span>
+            <h3>Help learners resume a lesson</h3>
+            <p class="muted">Choose work within a fictional capacity of 8 effort points. For this exercise, a usable resume feature needs all three core items.</p>
+            <div class="stack" id="tickets">
+              <div class="ticket"><label><input type="checkbox" value="2" data-core="true"> Design the resume experience</label><small>2 points · Core</small></div>
+              <div class="ticket"><label><input type="checkbox" value="3" data-core="true"> Save and restore lesson progress</label><small>3 points · Core</small></div>
+              <div class="ticket"><label><input type="checkbox" value="3" data-core="true"> Test the complete resume journey</label><small>3 points · Core</small></div>
+              <div class="ticket"><label><input type="checkbox" value="2"> Add a celebratory animation</label><small>2 points · Optional</small></div>
+            </div>
+            <div class="spaced"><strong id="capacityText">0 of 8 points selected</strong></div>
+            <div class="meter" aria-hidden="true"><span id="capacityBar"></span></div>
+            <button id="checkSprint" class="primary">Review sprint plan</button>
+            <div id="sprintFeedback" class="feedback" aria-live="polite"></div>
+          </div>
+
+          <div class="card">
+            <span class="tag">Daily stand-up simulator</span>
+            <h3>Make the blocker actionable</h3>
+            <div class="inset">
+              <p><strong>Yesterday</strong><br>I built the resume button.</p>
+              <p><strong>Today</strong><br>I plan to connect it to saved progress.</p>
+              <p><strong>Blocker</strong><br>I do not know which progress data the service returns.</p>
+            </div>
+            <p class="spaced">What should the team do next?</p>
+            <div class="choices" id="standupChoices">
+              <button data-good="false">Ask everyone to justify how busy they were</button>
+              <button data-good="true">Arrange a follow-up with the relevant teammate and adjust today's plan if needed</button>
+              <button data-good="false">Wait until the sprint ends to discuss it</button>
+            </div>
+            <div id="standupFeedback" class="feedback" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div class="grid two spaced">
+          <div class="card">
+            <h3>Sprint review</h3>
+            <p>Inspect the product outcome with stakeholders. What works, what did we learn, and what should change next?</p>
+          </div>
+          <div class="card">
+            <h3>Sprint retrospective</h3>
+            <p>Inspect how the team worked. What helped, what slowed us down, and what will we improve next sprint?</p>
+          </div>
+        </div>
+        <div class="note">Agile emphasizes small increments, feedback, and adaptation. A roadmap is not necessarily an annual feature promise. A backlog is not just today's tasks. Sprints do not guarantee a production release every time, and daily stand-ups are primarily for coordination rather than reporting to a manager.</div>
+        <div class="finish"><button class="primary" data-complete="delivery">Mark as reviewed</button></div>
+      </section>
+
+      <section id="discovery" aria-labelledby="discoveryTitle" hidden>
+        <div class="section-head">
+          <div class="eyebrow">Understand before solving</div>
+          <h2 id="discoveryTitle">Make assumptions visible.</h2>
+          <p>You cannot eliminate every assumption. Name the risky ones, collect evidence, and avoid treating a proposed solution as a proven need.</p>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <span class="tag">Problem space or solution space?</span>
+            <h3 id="assumptionText"></h3>
+            <div class="actions" id="assumptionChoices">
+              <button data-answer="Problem">Problem space</button>
+              <button data-answer="Solution">Solution space</button>
+            </div>
+            <div id="assumptionFeedback" class="feedback" aria-live="polite"></div>
+            <div class="actions"><button id="nextAssumption">Next statement</button></div>
+          </div>
+          <div class="card">
+            <h3>Turn a claim into a test</h3>
+            <p><strong>Claim</strong><br>Daily reminders will bring learners back.</p>
+            <p><strong>Hidden assumption</strong><br>Forgetting is the main reason learners stop.</p>
+            <p><strong>First investigation</strong><br>Speak with learners who stopped and examine where they dropped off.</p>
+            <p><strong>Possible experiment</strong><br>If evidence supports forgetting as a cause, test optional reminders against a comparison group.</p>
+            <p><strong>Success and guardrails</strong><br>Look for more useful lesson returns while checking notification opt-outs and complaints.</p>
+          </div>
+        </div>
+
+        <div class="grid two spaced">
+          <div class="card">
+            <span class="tag">Primary research</span>
+            <h3>Gather new evidence directly</h3>
+            <p>Interview users, observe their workflow, or run usability sessions. Ask about actual past behavior rather than only what they say they might do.</p>
+          </div>
+          <div class="card">
+            <span class="tag">Secondary research</span>
+            <h3>Learn from existing evidence</h3>
+            <p>Review existing studies, published reports, previous research, and competitor information. Check whether the evidence applies to your users and context.</p>
+          </div>
+        </div>
+        <div class="note">Research reduces uncertainty. It does not mean you must know everything before experimenting. Start with the assumption that would most seriously undermine the idea if it were false.</div>
+        <div class="finish"><button class="primary" data-complete="discovery">Mark as reviewed</button></div>
+      </section>
+
+      <section id="roles" aria-labelledby="rolesTitle" hidden>
+        <div class="section-head">
+          <div class="eyebrow">Separate purchasing from usage</div>
+          <h2 id="rolesTitle">Who buys it? Who uses it?</h2>
+          <p>For this revision exercise, the customer is the buyer and the user is the person using the product. One person can fill both roles.</p>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <span class="tag">Role detective</span>
+            <h3 id="roleScenario"></h3>
+            <label for="customerSelect">Customer</label>
+            <select id="customerSelect"></select>
+            <label class="spaced" for="userSelect">User</label>
+            <select id="userSelect"></select>
+            <div class="actions">
+              <button class="primary" id="checkRoles">Check roles</button>
+              <button id="nextRoles">Next scenario</button>
+            </div>
+            <div id="roleFeedback" class="feedback" aria-live="polite"></div>
+          </div>
+          <div class="card">
+            <h3>Why the difference matters</h3>
+            <p>A parent buying a toy may care about price, durability, and safety. The child may care about fun.</p>
+            <p>A company purchasing software may care about cost and security. Employees using it may care about speed and ease of use.</p>
+            <div class="inset">
+              <strong>Research both perspectives</strong>
+              <p>A product can be easy to buy but frustrating to use, or loved by users but difficult for a buyer to approve.</p>
+            </div>
+            <p class="spaced muted">In real organizations, buyer, payer, decision-maker, administrator, and user may be separate roles. Start by identifying them rather than assuming.</p>
+          </div>
+        </div>
+        <div class="finish"><button class="primary" data-complete="roles">Mark as reviewed</button></div>
+      </section>
+
+      <section id="practice" aria-labelledby="practiceTitle" hidden>
+        <div class="section-head">
+          <div class="eyebrow">Retrieve before you reveal</div>
+          <h2 id="practiceTitle">Make the learning stick.</h2>
+          <p>Explain each concept in your own words, then reveal the answer. Finish with a short scenario quiz.</p>
+        </div>
+
+        <div class="card">
+          <span class="tag">Flashcards</span>
+          <div id="flashCounter" class="counter"></div>
+          <button id="flashcard" class="flashcard" aria-label="Reveal flashcard answer">
+            <small id="flashHint">Think of your answer, then click</small>
+            <strong id="flashTitle"></strong>
+            <span id="flashBody"></span>
+          </button>
+          <div class="actions">
+            <button id="previousFlash">Previous card</button>
+            <button id="nextFlash">Next card</button>
+          </div>
+        </div>
+
+        <div class="card spaced">
+          <span class="tag">Knowledge check</span>
+          <div id="quizCounter" class="counter"></div>
+          <h3 id="quizQuestion"></h3>
+          <div class="choices" id="quizOptions"></div>
+          <div id="quizFeedback" class="feedback" aria-live="polite"></div>
+          <div class="actions">
+            <button id="nextQuiz" class="primary" disabled>Next question</button>
+            <button id="restartQuiz">Restart quiz</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>Built around your Session 1 notes with clarifications where the original explanations were simplified. All simulator outcomes are illustrative. Progress lasts while this page is open.</footer>
+  </div>
+
+  <script>
+    "use strict";
+
+    const $ = id => document.getElementById(id);
+    const reviewed = new Set();
+
+    function feedback(id, message, correct = true) {
+      const element = $(id);
+      element.textContent = message;
+      element.classList.toggle("bad", !correct);
+    }
+
+    document.querySelectorAll("[data-page]").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll("main > section").forEach(section => {
+          section.hidden = section.id !== button.dataset.page;
+        });
+        document.querySelectorAll("[data-page]").forEach(item => {
+          if (item === button) item.setAttribute("aria-current", "page");
+          else item.removeAttribute("aria-current");
+        });
+      });
+    });
+
+    document.querySelectorAll("[data-complete]").forEach(button => {
+      button.addEventListener("click", () => {
+        const topic = button.dataset.complete;
+        if (reviewed.has(topic)) {
+          reviewed.delete(topic);
+          button.textContent = "Mark as reviewed";
+          button.setAttribute("aria-pressed", "false");
+        } else {
+          reviewed.add(topic);
+          button.textContent = "Reviewed · Undo";
+          button.setAttribute("aria-pressed", "true");
+        }
+        $("progress").value = reviewed.size;
+        $("progressText").textContent = `${reviewed.size} of 6 reviewed`;
+      });
+      button.setAttribute("aria-pressed", "false");
+    });
+
+    function updateRule() {
+      const need = Number($("need").value);
+      const business = Number($("business").value);
+      $("needValue").textContent = need;
+      $("businessValue").textContent = business;
+      let message;
+      if (need >= 60 && business >= 60) {
+        message = "A promising overlap. You have a reason to explore this idea. Test the riskiest assumptions and check feasibility before committing.";
+      } else if (need >= 60) {
+        message = "A real need, but an unclear business case. Explore who benefits, who might pay, or whether solving it reduces cost or improves retention.";
+      } else if (business >= 60) {
+        message = "An attractive business story with weak user evidence. Research the problem before investing in the solution.";
+      } else {
+        message = "Too much uncertainty on both sides. Start with discovery and identify a meaningful problem worth solving.";
+      }
+      feedback("ruleFeedback", message);
+    }
+    ["need", "business"].forEach(id => $(id).addEventListener("input", updateRule));
+
+    function updateFacebook() {
+      const count = Number($("friends").value);
+      const known = $("knownFriends").checked;
+      const feed = $("feed").checked;
+      $("friendCount").textContent = count;
+      let message;
+      if (count === 0) {
+        message = "No connections yet. A home feed alone cannot create updates from friends who are not connected. Help the user find relevant people first.";
+      } else if (!known) {
+        message = "More connections do not necessarily mean more value. Unfamiliar people may give the user little reason to care about updates.";
+      } else if (!feed) {
+        message = "Familiar connections create potential value, but the user still has to visit profiles to discover updates. Reduce that effort.";
+      } else {
+        message = "Familiar connections plus easy access to updates form a plausible reason to return. Measure whether people actually find value and come back.";
+      }
+      if (count >= 7) {
+        message += " You reached the session's seven-friend marker. Crossing it does not guarantee retention.";
+      }
+      feedback("facebookFeedback", message);
+    }
+    ["friends", "knownFriends", "feed"].forEach(id => {
+      $(id).addEventListener("input", updateFacebook);
+    });
+
+    function bindChoiceCheck(container, result, success, retry) {
+      $(container).querySelectorAll("button").forEach(button => {
+        button.addEventListener("click", () => {
+          $(container).querySelectorAll("button").forEach(item => item.classList.remove("selected"));
+          button.classList.add("selected");
+          const correct = button.dataset.good === "true";
+          feedback(result, correct ? success : retry, correct);
+        });
+      });
+    }
+
+    bindChoiceCheck(
+      "facebookChoices",
+      "facebookAnswer",
+      "Yes. Test the proposed mechanism and measure the outcome. A carefully designed experiment gives stronger causal evidence than simply noticing a correlation.",
+      "Try again. Feature counts and a threshold alone do not establish that users received value or that a feature caused them to return."
+    );
+
+    bindChoiceCheck(
+      "standupChoices",
+      "standupFeedback",
+      "Yes. Surface the blocker, connect the right people, and adapt the plan. Detailed problem-solving can happen immediately afterward with those involved.",
+      "Try again. The meeting should help the team coordinate toward the sprint goal and remove obstacles early."
+    );
+
+    const markets = [
+      {
+        text: "A software company sells payroll subscriptions to employers.",
+        answer: "B2B",
+        why: "The purchasing customer is another business, even though individual employees may use the software."
+      },
+      {
+        text: "Pavan buys a meal through a food delivery app for himself.",
+        answer: "B2C",
+        why: "This transaction serves an individual consumer. Other parts of the platform may serve businesses."
+      },
+      {
+        text: "A professional network sells personal subscriptions to job seekers and recruiting tools to employers.",
+        answer: "Both",
+        why: "The personal subscription serves consumers, while recruiting tools serve organizations."
+      },
+      {
+        text: "A consulting firm delivers a technology project for a bank.",
+        answer: "B2B",
+        why: "The bank is the firm's business customer."
+      }
+    ];
+    let marketIndex = 0;
+
+    function renderMarket() {
+      $("marketScenario").textContent = markets[marketIndex].text;
+      $("marketFeedback").textContent = "";
+      $("marketChoices").querySelectorAll("button").forEach(button => button.classList.remove("selected"));
+    }
+    $("marketChoices").querySelectorAll("button").forEach(button => {
+      button.addEventListener("click", () => {
+        const scenario = markets[marketIndex];
+        const correct = button.dataset.answer === scenario.answer;
+        feedback("marketFeedback", `${correct ? "Correct." : `This is ${scenario.answer}.`} ${scenario.why}`, correct);
+      });
+    });
+    $("nextMarket").addEventListener("click", () => {
+      marketIndex = (marketIndex + 1) % markets.length;
+      renderMarket();
+    });
+
+    const delivery = [
+      {
+        title: "Roadmap · Set direction",
+        definition: "A roadmap communicates priorities and intended outcomes over time. Its level of detail and time horizon depend on the team.",
+        example: "For the coming quarter, prioritize helping learners return to unfinished lessons. Later, explore support for a consistent study habit.",
+        analogy: "Like choosing your major goals for the year before filling every day with tasks.",
+        nuance: "PMs usually shape it with leadership and the team. It should change when evidence or priorities change."
+      },
+      {
+        title: "PRD · Create shared understanding",
+        definition: "A product requirements document explains the problem, audience, desired behavior, scope, constraints, and success measures.",
+        example: "Learners lose their place. Let them resume from their last saved step. Track successful resumes and weekly learner retention, while checking save failures.",
+        analogy: "Like agreeing on the purpose and requirements of a trip before booking its details.",
+        nuance: "A PRD is more than a feature list. Design and engineering help decide the implementation. BRDs and FSDs may have different purposes rather than being interchangeable names."
+      },
+      {
+        title: "Backlog · Order the work",
+        definition: "A product backlog is an evolving, ordered collection of potential work, including features, fixes, improvements, and research.",
+        example: "Explore why learners stop, design resume behavior, save progress, test interrupted sessions, and measure the results.",
+        analogy: "Like a prioritized list of everything you might need to do, not just today's checklist.",
+        nuance: "Items can come from research, bugs, feedback, and strategy as well as a PRD. The team refines large items into workable pieces."
+      },
+      {
+        title: "Sprint · Pursue a short-term goal",
+        definition: "A sprint is a fixed-length cycle used in Scrum. Two weeks is common. Scrum sprints last one month or less.",
+        example: "Sprint goal — learners can reliably resume an interrupted lesson. Select a realistic set of work that supports this goal.",
+        analogy: "Like choosing one useful milestone for your next training block.",
+        nuance: "Aim for a usable increment that meets the team's quality standard. A release can happen during a sprint or later, depending on the product."
+      },
+      {
+        title: "Daily stand-up · Coordinate the next step",
+        definition: "A short daily check-in helps the team inspect progress toward the sprint goal and adapt its plan.",
+        example: "Yesterday I built the resume button. Today I will connect it to saved progress. I need help confirming the data format.",
+        analogy: "Like teammates checking their route during a hike so nobody stays stuck at the wrong turn.",
+        nuance: "Yesterday, today, and blockers are useful prompts, not mandatory questions. The purpose is coordination and progress, not a status report to the boss."
+      }
+    ];
+
+    function renderDelivery(index) {
+      const step = delivery[index];
+      $("deliveryDetail").replaceChildren();
+      const title = document.createElement("h3");
+      title.textContent = step.title;
+      $("deliveryDetail").append(title);
+      [step.definition, step.example, step.analogy, step.nuance].forEach((text, i) => {
+        const paragraph = document.createElement("p");
+        paragraph.textContent = text;
+        if (i === 1) paragraph.className = "inset";
+        if (i === 3) paragraph.className = "muted";
+        $("deliveryDetail").append(paragraph);
+      });
+      document.querySelectorAll("[data-step]").forEach(button => {
+        button.setAttribute("aria-pressed", String(Number(button.dataset.step) === index));
+      });
+    }
+    document.querySelectorAll("[data-step]").forEach(button => {
+      button.addEventListener("click", () => renderDelivery(Number(button.dataset.step)));
+    });
+
+    function sprintSelection() {
+      return [...$("tickets").querySelectorAll("input:checked")];
+    }
+    $("tickets").addEventListener("change", () => {
+      const total = sprintSelection().reduce((sum, input) => sum + Number(input.value), 0);
+      $("capacityText").textContent = `${total} of 8 points selected`;
+      $("capacityBar").style.width = `${Math.min(total / 8, 1) * 100}%`;
+      $("capacityBar").style.background = total > 8 ? "var(--red)" : "var(--mint)";
+      $("sprintFeedback").textContent = "";
+    });
+    $("checkSprint").addEventListener("click", () => {
+      const selected = sprintSelection();
+      const total = selected.reduce((sum, input) => sum + Number(input.value), 0);
+      const coreCount = selected.filter(input => input.dataset.core === "true").length;
+      if (total > 8) {
+        feedback("sprintFeedback", "The plan exceeds this exercise's capacity. Drop optional work or rethink the scope. Do not silently remove testing to make the numbers fit.", false);
+      } else if (coreCount < 3) {
+        feedback("sprintFeedback", "You are within capacity, but the selected work does not yet support the complete resume journey. Include design, implementation, and testing.", false);
+      } else {
+        feedback("sprintFeedback", "A coherent plan. All three core items support the goal and fit the exercise's capacity. Real estimates remain uncertain, so inspect progress and adapt together.");
+      }
+    });
+
+    const assumptions = [
+      {
+        text: "Learners struggle to find where they stopped in a lesson.",
+        answer: "Problem",
+        why: "This describes a difficulty. You still need evidence of who experiences it, how often, and how much it matters."
+      },
+      {
+        text: "We should send a push notification every evening.",
+        answer: "Solution",
+        why: "This proposes an intervention. First investigate whether forgetting is actually a meaningful cause of drop-off."
+      },
+      {
+        text: "Recruiters spend too much time sorting irrelevant applications.",
+        answer: "Problem",
+        why: "This describes friction in a workflow without prescribing a feature."
+      },
+      {
+        text: "Add an AI assistant to the homepage.",
+        answer: "Solution",
+        why: "This names a feature before explaining the user problem it should solve."
+      },
+      {
+        text: "New users cannot tell which onboarding step is required next.",
+        answer: "Problem",
+        why: "This describes a user obstacle. Observation and usability research could help establish its severity."
+      }
+    ];
+    let assumptionIndex = 0;
+    function renderAssumption() {
+      $("assumptionText").textContent = assumptions[assumptionIndex].text;
+      $("assumptionFeedback").textContent = "";
+    }
+    $("assumptionChoices").querySelectorAll("button").forEach(button => {
+      button.addEventListener("click", () => {
+        const current = assumptions[assumptionIndex];
+        const correct = button.dataset.answer === current.answer;
+        feedback("assumptionFeedback", `${correct ? "Correct." : `This belongs in the ${current.answer.toLowerCase()} space.`} ${current.why}`, correct);
+      });
+    });
+    $("nextAssumption").addEventListener("click", () => {
+      assumptionIndex = (assumptionIndex + 1) % assumptions.length;
+      renderAssumption();
+    });
+
+    const roles = [
+      {
+        text: "A father buys a toy for his child.",
+        options: ["Father", "Child", "Toy shop"],
+        customer: "Father",
+        user: "Child",
+        why: "The father makes the purchase. The child uses the toy."
+      },
+      {
+        text: "Pavan buys a PS5 for himself.",
+        options: ["Pavan", "The retailer", "The manufacturer"],
+        customer: "Pavan",
+        user: "Pavan",
+        why: "Pavan is both the buyer and the user."
+      },
+      {
+        text: "A company purchases a design tool for its designers.",
+        options: ["The company", "The designers", "The software vendor"],
+        customer: "The company",
+        user: "The designers",
+        why: "The organization buys the subscription and the designers use the tool."
+      },
+      {
+        text: "A child buys a game with pocket money and plays it.",
+        options: ["The child", "A parent", "The game studio"],
+        customer: "The child",
+        user: "The child",
+        why: "The role depends on what the person does in this transaction, not their age."
+      }
+    ];
+    let roleIndex = 0;
+    function renderRoles() {
+      const scenario = roles[roleIndex];
+      $("roleScenario").textContent = scenario.text;
+      ["customerSelect", "userSelect"].forEach(id => {
+        $(id).replaceChildren(new Option("Choose a role", ""));
+        scenario.options.forEach(option => $(id).add(new Option(option, option)));
+      });
+      $("roleFeedback").textContent = "";
+    }
+    $("checkRoles").addEventListener("click", () => {
+      const scenario = roles[roleIndex];
+      if (!$("customerSelect").value || !$("userSelect").value) {
+        feedback("roleFeedback", "Choose both roles before checking.", false);
+        return;
+      }
+      const correct = $("customerSelect").value === scenario.customer &&
+        $("userSelect").value === scenario.user;
+      feedback("roleFeedback", `${correct ? "Correct." : "Revisit who purchases and who uses it."} ${scenario.why}`, correct);
+    });
+    $("nextRoles").addEventListener("click", () => {
+      roleIndex = (roleIndex + 1) % roles.length;
+      renderRoles();
+    });
+
+    const flashcards = [
+      ["Golden rule", "Understand user needs and achieve business outcomes. Connect a real problem to a worthwhile business result."],
+      ["Facebook case", "Relevant connections and easy access to updates can create value and reasons to return. Measure the effect rather than assuming it."],
+      ["B2B and B2C", "B2B serves business customers. B2C serves individual consumers. One company can do both."],
+      ["Roadmap", "A shared view of direction, priorities, and intended outcomes over time."],
+      ["PRD", "A document clarifying the problem, users, scope, requirements, and success measures."],
+      ["Backlog", "An evolving, ordered collection of potential product work."],
+      ["Sprint", "A fixed-length Scrum cycle focused on a goal and a usable increment."],
+      ["Daily stand-up", "A short check-in to inspect progress, coordinate the next steps, and surface blockers."],
+      ["Assumptions", "Unverified beliefs. Identify the risky ones and collect evidence before relying on them."],
+      ["Customer and user", "The customer buys. The user uses. One person may fill both roles."],
+      ["Activation and retention", "Activation is reaching initial value. Retention is continuing to return and receive value."],
+      ["Review and retrospective", "The review inspects the product outcome. The retrospective inspects how the team worked."]
+    ];
+    let flashIndex = 0;
+    let flashRevealed = false;
+    function renderFlash() {
+      $("flashCounter").textContent = `Card ${flashIndex + 1} of ${flashcards.length}`;
+      $("flashTitle").textContent = flashcards[flashIndex][0];
+      $("flashBody").textContent = flashRevealed ? flashcards[flashIndex][1] : "Explain this concept in your own words.";
+      $("flashHint").textContent = flashRevealed ? "Click to hide the answer" : "Think of your answer, then click";
+      $("flashcard").setAttribute("aria-label", flashRevealed ? "Hide flashcard answer" : "Reveal flashcard answer");
+    }
+    $("flashcard").addEventListener("click", () => {
+      flashRevealed = !flashRevealed;
+      renderFlash();
+    });
+    function moveFlash(direction) {
+      flashIndex = (flashIndex + direction + flashcards.length) % flashcards.length;
+      flashRevealed = false;
+      renderFlash();
+    }
+    $("previousFlash").addEventListener("click", () => moveFlash(-1));
+    $("nextFlash").addEventListener("click", () => moveFlash(1));
+
+    const quiz = [
+      {
+        question: "Leadership asks for a chatbot. What is the strongest first step?",
+        options: ["Choose a chatbot vendor", "Understand the user problem and intended business outcome", "Add it to the sprint immediately"],
+        answer: 1,
+        why: "A requested feature is a possible solution. First clarify the need, evidence, and intended result."
+      },
+      {
+        question: "Users register but never experience the product's main benefit. What should you investigate first?",
+        options: ["Activation", "The number of backlog tickets", "The length of the roadmap"],
+        answer: 0,
+        why: "Activation concerns helping users reach an initial moment of value."
+      },
+      {
+        question: "A company buys software for its support agents. Which statement fits?",
+        options: ["It is B2C because humans use it", "The agents are necessarily the buyers", "It is B2B, with the company as customer and agents as users"],
+        answer: 2,
+        why: "Classify the purchasing relationship and identify users separately."
+      },
+      {
+        question: "Where would you communicate broad product priorities for the coming months?",
+        options: ["Daily stand-up", "Roadmap", "Sprint retrospective"],
+        answer: 1,
+        why: "The roadmap communicates direction and priorities over time."
+      },
+      {
+        question: "What makes a PRD useful?",
+        options: ["A long feature list without context", "Detailed promises before research", "Shared clarity about the problem, requirements, scope, and success"],
+        answer: 2,
+        why: "The purpose is alignment, not document length."
+      },
+      {
+        question: "Which description best fits a product backlog?",
+        options: ["An ordered, evolving collection of potential work", "Only today's assigned tasks", "A fixed annual commitment"],
+        answer: 0,
+        why: "Backlogs change as teams learn, discover issues, and adjust priorities."
+      },
+      {
+        question: "A blocker emerges during stand-up. What is the best response?",
+        options: ["Wait for the retrospective", "Coordinate help and adapt the plan", "Add unrelated work to keep everyone busy"],
+        answer: 1,
+        why: "Surfacing a blocker is useful when it leads to action."
+      },
+      {
+        question: "Users with more connections return more often. What does that establish by itself?",
+        options: ["Connections definitely caused retention", "Every user needs exactly seven friends", "An association worth investigating"],
+        answer: 2,
+        why: "A correlation alone cannot rule out alternative explanations."
+      },
+      {
+        question: "Which meeting focuses on improving how the team works?",
+        options: ["Sprint retrospective", "Sprint review", "Customer sales call"],
+        answer: 0,
+        why: "The retrospective improves collaboration, processes, and working practices."
+      },
+      {
+        question: "Which approach best reflects Agile thinking?",
+        options: ["Lock every requirement before learning from users", "Deliver useful increments, collect feedback, and adapt", "Skip planning and documentation entirely"],
+        answer: 1,
+        why: "Agile values feedback and adaptation. It does not mean abandoning planning or quality."
+      }
+    ];
+
+    let quizIndex = 0;
+    let quizScore = 0;
+    let quizAnswered = false;
+
+    function renderQuiz() {
+      quizAnswered = false;
+      $("quizFeedback").textContent = "";
+      $("nextQuiz").disabled = true;
+      $("nextQuiz").hidden = false;
+      $("quizCounter").textContent = `Question ${quizIndex + 1} of ${quiz.length} · ${quizScore} correct`;
+      $("quizQuestion").textContent = quiz[quizIndex].question;
+      $("quizOptions").replaceChildren();
+      $("nextQuiz").textContent = quizIndex === quiz.length - 1 ? "See results" : "Next question";
+
+      quiz[quizIndex].options.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.textContent = option;
+        button.addEventListener("click", () => answerQuiz(index));
+        $("quizOptions").append(button);
+      });
+    }
+
+    function answerQuiz(index) {
+      if (quizAnswered) return;
+      quizAnswered = true;
+      const item = quiz[quizIndex];
+      const correct = index === item.answer;
+      if (correct) quizScore++;
+      [...$("quizOptions").children].forEach((button, optionIndex) => {
+        button.disabled = true;
+        if (optionIndex === item.answer) button.classList.add("correct");
+        else if (optionIndex === index) button.classList.add("wrong");
+      });
+      feedback("quizFeedback", `${correct ? "Correct." : "Not quite."} ${item.why}`, correct);
+      $("nextQuiz").disabled = false;
+      $("quizCounter").textContent = `Question ${quizIndex + 1} of ${quiz.length} · ${quizScore} correct`;
+    }
+
+    $("nextQuiz").addEventListener("click", () => {
+      if (!quizAnswered) return;
+      if (quizIndex < quiz.length - 1) {
+        quizIndex++;
+        renderQuiz();
+      } else {
+        $("quizCounter").textContent = "Knowledge check complete";
+        $("quizQuestion").textContent = `You scored ${quizScore} out of ${quiz.length}`;
+        $("quizOptions").replaceChildren();
+        $("nextQuiz").hidden = true;
+        feedback(
+          "quizFeedback",
+          quizScore >= 8
+            ? "Your foundations are holding up. Apply the same thinking to a product you use and explain its user need, business outcome, and riskiest assumption."
+            : "Revisit the explanations for the concepts that felt uncertain, then try another round."
+        );
+      }
+    });
+
+    $("restartQuiz").addEventListener("click", () => {
+      quizIndex = 0;
+      quizScore = 0;
+      renderQuiz();
+    });
+
+    updateRule();
+    updateFacebook();
+    renderMarket();
+    renderDelivery(0);
+    renderAssumption();
+    renderRoles();
+    renderFlash();
+    renderQuiz();
+  </script>
+</body>
+</html>
